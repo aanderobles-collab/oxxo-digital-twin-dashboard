@@ -6,7 +6,7 @@ import pandas as pd
 import plotly.express as px
 import streamlit as st
 import streamlit.components.v1 as components
-
+import hmac
 
 # ==================================================
 # CONFIGURACIÓN GENERAL
@@ -19,6 +19,37 @@ st.set_page_config(
 
 NOW = datetime.now()
 
+# ==================================================
+# LOGIN CON STREAMLIT SECRETS
+# ==================================================
+def check_login():
+    if "authenticated" not in st.session_state:
+        st.session_state["authenticated"] = False
+
+    if st.session_state["authenticated"]:
+        return True
+
+    st.title("Acceso al Dashboard")
+    st.caption("Ingresa usuario y contraseña para visualizar el Digital Twin.")
+
+    username = st.text_input("Usuario")
+    password = st.text_input("Contraseña", type="password")
+
+    if st.button("Entrar"):
+        users = st.secrets["users"]
+
+        if username in users and hmac.compare_digest(password, users[username]):
+            st.session_state["authenticated"] = True
+            st.session_state["username"] = username
+            st.rerun()
+        else:
+            st.error("Usuario o contraseña incorrectos")
+
+    return False
+
+
+if not check_login():
+    st.stop()
 
 # ==================================================
 # CSS GLOBAL
